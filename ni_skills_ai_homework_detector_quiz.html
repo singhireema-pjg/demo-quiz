@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ni Skills | The AI Homework Detector</title>
+<style>
+  :root {
+    --navy: #19324d; --blue: #3167d5; --pale: #edf4ff; --ink: #253246;
+    --muted: #5e6b7c; --green: #18794e; --green-bg: #e8f7ef;
+    --red: #b42318; --red-bg: #fff0ef; --gold: #9a6700; --gold-bg: #fff7df;
+    --border: #d9e2ee; --white: #fff; --bg: #f5f8fc;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 50px; }
+  header { background: linear-gradient(135deg, #19324d, #3167d5); color: white; padding: 28px; border-radius: 20px; }
+  .eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; font-weight: 800; opacity: .88; }
+  h1 { line-height: 1.15; margin: 8px 0 10px; font-size: clamp(1.8rem, 5vw, 2.65rem); }
+  header p { margin: 0; max-width: 680px; }
+  .pill { display: inline-block; margin-top: 16px; padding: 5px 10px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; font-size: .9rem; }
+  section, .panel { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 22px; margin-top: 18px; box-shadow: 0 4px 16px rgba(25,50,77,.045); }
+  h2 { margin: 0 0 10px; color: var(--navy); font-size: 1.35rem; }
+  h3 { margin: 0 0 10px; color: var(--navy); }
+  .scenario-callout { background: var(--pale); border-left: 4px solid var(--blue); padding: 14px 16px; border-radius: 8px; margin-top: 14px; }
+  .scenario-callout strong { color: var(--navy); }
+  .instructions { color: var(--muted); margin-bottom: 0; }
+  .progress-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; font-weight: 700; color: var(--muted); font-size: .92rem; }
+  .progress { height: 8px; background: #e7edf5; border-radius: 99px; overflow: hidden; margin: 10px 0 20px; }
+  .progress-fill { height: 100%; width: 0%; background: var(--blue); transition: width .25s ease; }
+  .q-label { color: var(--blue); text-transform: uppercase; letter-spacing: .08em; font-weight: 800; font-size: .78rem; }
+  .question { font-size: 1.18rem; font-weight: 750; line-height: 1.4; margin: 8px 0 16px; }
+  .option { display: flex; align-items: flex-start; gap: 11px; border: 1.5px solid var(--border); padding: 13px 14px; border-radius: 11px; margin: 9px 0; cursor: pointer; transition: border-color .15s, background .15s; }
+  .option:hover { border-color: #8aa9e9; background: #f9fbff; }
+  .option input { margin-top: 5px; accent-color: var(--blue); flex: 0 0 auto; }
+  .option:has(input:checked) { border-color: var(--blue); background: var(--pale); }
+  .option.correct { border-color: #65b88d; background: var(--green-bg); }
+  .option.incorrect { border-color: #e9a19b; background: var(--red-bg); }
+  .hint { margin-top: 14px; }
+  button { border: 0; border-radius: 10px; padding: 11px 17px; font: inherit; font-weight: 750; cursor: pointer; }
+  button:focus-visible, input:focus-visible + span { outline: 3px solid #9bb8ff; outline-offset: 2px; }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: #2456bb; }
+  .btn-secondary { background: #e9eef6; color: var(--navy); }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .feedback { margin-top: 16px; border-radius: 10px; padding: 14px; }
+  .feedback.good { color: #145c3b; background: var(--green-bg); border: 1px solid #a7dfbf; }
+  .feedback.bad { color: #8f2018; background: var(--red-bg); border: 1px solid #f1b8b3; }
+  .feedback h3 { margin-bottom: 4px; color: inherit; font-size: 1rem; }
+  .hint-box { background: var(--gold-bg); border: 1px solid #ead28d; padding: 12px 14px; border-radius: 10px; margin-top: 10px; }
+  .hidden { display: none !important; }
+  .small { font-size: .9rem; color: var(--muted); }
+  .score { font-size: 2.3rem; font-weight: 850; color: var(--blue); }
+  .takeaway { background: #f0f8f3; border-left: 4px solid #299764; padding: 16px; border-radius: 9px; }
+  footer { text-align: center; color: var(--muted); font-size: .88rem; padding-top: 22px; }
+  @media (max-width: 560px) { .wrap { padding: 12px 10px 30px; } header, section, .panel { padding: 18px; border-radius: 14px; } .btn-row button { flex: 1 1 auto; } }
+  @media print {
+    body { background: white; }
+    .wrap { max-width: none; padding: 0; }
+    header { background: white; color: black; border: 2px solid #333; }
+    section, .panel { box-shadow: none; break-inside: avoid; }
+    .interactive-only, .btn-row, .hint, footer { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Ni Skills · Human Intelligence & AI Literacy</div>
+    <h1>The AI Homework Detector</h1>
+    <p>Can an AI flag prove that a student cheated? Explore the scenario, weigh the evidence, and decide how humans should use AI responsibly.</p>
+    <span class="pill">Grades 7–8 · Ages 12–14 · 5 questions</span>
+  </header>
+
+  <section id="scenario">
+    <h2>Scenario: The AI Homework Detector</h2>
+    <p>At Riverdale School, a teacher uses an AI tool to identify homework that may have been copied. The tool flags Maya's science report because several sentences resemble information found online.</p>
+    <p>Maya explains that she used a textbook and an AI writing assistant to understand the topic, then wrote the report in her own words. The AI tool has not checked her notes, drafts or the sources she used. The teacher must decide whether to investigate further before taking any action.</p>
+    <div class="scenario-callout"><strong>What the AI recommended:</strong> “Mark Maya's report as copied and give her a zero.”</div>
+    <p class="instructions"><strong>Your challenge:</strong> Should the school follow the AI recommendation, question it, or use a better method to reach a fair decision?</p>
+  </section>
+
+  <section id="quiz" class="interactive-only">
+    <div class="progress-row"><span id="questionCounter">Question 1 of 5</span><span id="scoreCounter">Score: 0</span></div>
+    <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="q-label" id="questionType">Multiple choice</div>
+    <div class="question" id="questionText"></div>
+    <div class="small" id="selectionNote"></div>
+    <form id="optionsForm"></form>
+    <div class="hint">
+      <button type="button" class="btn-secondary" id="hintButton">Show hint</button>
+      <div id="hintBox" class="hint-box hidden" role="note"></div>
+    </div>
+    <div id="feedback" class="feedback hidden" aria-live="polite"></div>
+    <div class="btn-row">
+      <button type="button" class="btn-primary" id="submitButton">Check answer</button>
+      <button type="button" class="btn-primary hidden" id="nextButton">Next question →</button>
+    </div>
+  </section>
+
+  <section id="results" class="hidden">
+    <h2>Quiz complete!</h2>
+    <p class="score" id="finalScore">5 / 5</p>
+    <p id="resultMessage"></p>
+    <div class="takeaway"><strong>Ni Skills takeaway:</strong> AI can flag a possible problem, but a flag is not proof. Human intelligence helps us examine evidence, understand context, apply rules fairly and take responsibility for the final decision.</div>
+    <div class="btn-row interactive-only">
+      <button type="button" class="btn-primary" id="restartButton">Try again</button>
+      <button type="button" class="btn-secondary" id="printButton">Print / Save as PDF</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Remember the 3-step human check</h2>
+    <ol>
+      <li><strong>Question:</strong> What is the AI claiming, and what information did it use?</li>
+      <li><strong>Check:</strong> What evidence or context might be missing?</li>
+      <li><strong>Decide responsibly:</strong> Follow relevant rules, consider the people affected, and make an accountable decision.</li>
+    </ol>
+  </section>
+  <footer>Ni Skills · Think critically. Use AI thoughtfully. Humans remain responsible.</footer>
+</div>
+
+<script>
+const questions = [
+  {
+    type: "Single-select",
+    multi: false,
+    text: "Why should the teacher investigate before giving Maya a zero?",
+    options: [
+      {label: "The AI has identified a concern, but has not checked all the evidence", correct: true, feedback: "A similarity flag is a reason to investigate, not proof that Maya copied. Her notes, drafts and sources may help clarify what happened."},
+      {label: "AI tools cannot compare written text", correct: false, feedback: "Text-comparison tools can identify similarities, but a similarity result alone does not establish whether a student copied improperly."},
+      {label: "Students should never use textbooks for research", correct: false, feedback: "Textbooks are legitimate learning resources. The important issue is how Maya used and acknowledged her sources."},
+      {label: "The teacher must always accept a student's explanation without checking", correct: false, feedback: "Maya's explanation matters, but a fair decision also requires checking relevant evidence rather than automatically accepting or rejecting a claim."}
+    ],
+    hint: "Think about the difference between a warning sign and proof of what actually happened."
+  },
+  {
+    type: "Multi-select · Choose all that apply",
+    multi: true,
+    text: "Which actions would help the teacher make a fair and well-informed decision? Select all that apply.",
+    options: [
+      {label: "Review Maya's notes, drafts and sources", correct: true, feedback: "These materials can help show how Maya developed her report and used information from other sources."},
+      {label: "Ask Maya to explain her research and writing process", correct: true, feedback: "Listening to Maya gives the teacher relevant context that the AI comparison may not contain."},
+      {label: "Give a zero immediately because the AI flagged the report", correct: false, feedback: "A flag is not conclusive proof of misconduct, so immediate punishment without investigation risks an unfair decision."},
+      {label: "Check the school's rules about permitted AI use and referencing", correct: true, feedback: "The rules help the teacher assess whether Maya's use of sources and AI was permitted and whether proper acknowledgement was required."}
+    ],
+    hint: "Consider what evidence, explanation and school expectations are needed before deciding."
+  },
+  {
+    type: "True or false",
+    multi: false,
+    text: "If an AI tool reports a high similarity score, that alone proves that a student deliberately cheated.",
+    options: [
+      {label: "True", value: "true", correct: false, feedback: "A similarity score shows overlap, not necessarily deliberate cheating. Shared facts, quotations, common phrases and properly referenced material can also produce similarities."},
+      {label: "False", value: "false", correct: true, feedback: "A similarity score alone does not establish intent or misconduct; the teacher needs to examine the writing, sources and relevant school rules."}
+    ],
+    hint: "Ask yourself whether matching text can have more than one explanation."
+  },
+  {
+    type: "Single-select",
+    multi: false,
+    text: "After reviewing Maya's drafts, sources, explanation and the school's rules, the teacher finds that some sentences were copied without acknowledgement, while other sections are her own work. What is the most responsible next step?",
+    options: [
+      {label: "Ignore the copied sentences because some work is original", correct: false, feedback: "Original work does not automatically make unacknowledged copying acceptable. The teacher should address the specific concern fairly."},
+      {label: "Use the school's academic-integrity process and apply a proportionate response", correct: true, feedback: "The teacher should follow the rules, consider the evidence and distinguish the different parts of Maya's work rather than relying only on the AI flag."},
+      {label: "Let the AI choose the punishment without further review", correct: false, feedback: "The AI does not replace the teacher's responsibility to apply school rules fairly and consider the circumstances."},
+      {label: "Give the harshest possible punishment to discourage other students", correct: false, feedback: "A response should follow the school's rules and the established facts, not be chosen simply to frighten other students."}
+    ],
+    hint: "Look for an approach that respects the evidence, school rules and fairness."
+  },
+  {
+    type: "True or false",
+    multi: false,
+    text: "A teacher can use AI to flag possible problems while remaining responsible for checking the evidence and making the final decision.",
+    options: [
+      {label: "True", value: "true", correct: true, feedback: "AI can help identify issues for review, but the teacher must check the evidence, follow school policy and take responsibility for the decision."},
+      {label: "False", value: "false", correct: false, feedback: "Using an AI tool does not transfer the teacher's responsibility to investigate fairly and make an appropriate decision."}
+    ],
+    hint: "Think about whether using a tool removes the responsibility of the person who acts on its recommendation."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let selectedCorrectCount = 0;
+
+const counter = document.getElementById("questionCounter");
+const scoreCounter = document.getElementById("scoreCounter");
+const progressFill = document.getElementById("progressFill");
+const typeEl = document.getElementById("questionType");
+const questionText = document.getElementById("questionText");
+const selectionNote = document.getElementById("selectionNote");
+const optionsForm = document.getElementById("optionsForm");
+const hintBox = document.getElementById("hintBox");
+const feedback = document.getElementById("feedback");
+const submitButton = document.getElementById("submitButton");
+const nextButton = document.getElementById("nextButton");
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[current];
+  counter.textContent = `Question ${current + 1} of ${questions.length}`;
+  scoreCounter.textContent = `Score: ${score}`;
+  progressFill.style.width = `${(current / questions.length) * 100}%`;
+  typeEl.textContent = q.type;
+  questionText.textContent = q.text;
+  selectionNote.textContent = q.multi ? "Select every answer you think is correct." : "Choose one answer.";
+  optionsForm.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const label = document.createElement("label");
+    label.className = "option";
+    const input = document.createElement("input");
+    input.type = q.multi ? "checkbox" : "radio";
+    input.name = "answer";
+    input.value = String(i);
+    input.setAttribute("aria-label", opt.label);
+    const span = document.createElement("span");
+    span.textContent = opt.label;
+    label.append(input, span);
+    optionsForm.appendChild(label);
+  });
+  hintBox.textContent = q.hint;
+  hintBox.classList.add("hidden");
+  document.getElementById("hintButton").textContent = "Show hint";
+  feedback.className = "feedback hidden";
+  feedback.textContent = "";
+  submitButton.classList.remove("hidden");
+  nextButton.classList.add("hidden");
+  submitButton.disabled = false;
+}
+
+document.getElementById("hintButton").addEventListener("click", () => {
+  hintBox.classList.toggle("hidden");
+  document.getElementById("hintButton").textContent = hintBox.classList.contains("hidden") ? "Show hint" : "Hide hint";
+});
+
+submitButton.addEventListener("click", () => {
+  if (answered) return;
+  const q = questions[current];
+  const inputs = [...optionsForm.querySelectorAll("input")];
+  const chosen = inputs.map((input, i) => input.checked ? i : -1).filter(i => i >= 0);
+  if (!chosen.length) {
+    feedback.className = "feedback bad";
+    feedback.innerHTML = "<h3>Choose an answer first</h3><p>Select your answer, then check it.</p>";
+    return;
+  }
+  answered = true;
+  const correctIndices = q.options.map((o, i) => o.correct ? i : -1).filter(i => i >= 0);
+  const isCorrect = chosen.length === correctIndices.length && chosen.every(i => correctIndices.includes(i));
+  if (isCorrect) score++;
+  scoreCounter.textContent = `Score: ${score}`;
+  inputs.forEach((input, i) => {
+    input.disabled = true;
+    const label = input.closest(".option");
+    if (q.options[i].correct) label.classList.add("correct");
+    else if (input.checked) label.classList.add("incorrect");
+  });
+  const detail = chosen.map(i => `<p><strong>${escapeHtml(q.options[i].label)}</strong> — ${escapeHtml(q.options[i].feedback)}</p>`).join("");
+  const correctDetails = correctIndices.filter(i => !chosen.includes(i)).map(i => `<p><strong>Also consider: ${escapeHtml(q.options[i].label)}</strong> — ${escapeHtml(q.options[i].feedback)}</p>`).join("");
+  feedback.className = `feedback ${isCorrect ? "good" : "bad"}`;
+  feedback.innerHTML = `<h3>${isCorrect ? "Well done!" : "Let's learn from this."}</h3><p>${isCorrect ? "You selected the complete correct answer." : (q.multi ? "For this question, all correct options and no incorrect options are needed." : "Review the explanation and try applying it to the scenario.")}</p>${detail}${correctDetails}`;
+  submitButton.classList.add("hidden");
+  nextButton.textContent = current === questions.length - 1 ? "See results →" : "Next question →";
+  nextButton.classList.remove("hidden");
+  progressFill.style.width = `${((current + 1) / questions.length) * 100}%`;
+});
+
+nextButton.addEventListener("click", () => {
+  current++;
+  if (current < questions.length) {
+    renderQuestion();
+  } else {
+    document.getElementById("quiz").classList.add("hidden");
+    document.getElementById("results").classList.remove("hidden");
+    document.getElementById("finalScore").textContent = `${score} / ${questions.length}`;
+    const pct = score / questions.length;
+    document.getElementById("resultMessage").textContent =
+      pct === 1 ? "Excellent work! You carefully considered evidence, context and human responsibility." :
+      pct >= .6 ? "Good effort! Review the feedback to strengthen your thinking about AI and fair decisions." :
+      "Keep practising. Remember to check evidence and context before acting on an AI recommendation.";
+    document.getElementById("scenario").scrollIntoView({behavior: "smooth", block: "start"});
+  }
+});
+
+document.getElementById("restartButton").addEventListener("click", () => {
+  current = 0; score = 0;
+  document.getElementById("results").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+  renderQuestion();
+  document.getElementById("quiz").scrollIntoView({behavior: "smooth", block: "start"});
+});
+document.getElementById("printButton").addEventListener("click", () => window.print());
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+renderQuestion();
+</script>
+</body>
+</html>
